@@ -6,7 +6,7 @@ class DatabaseHelper {
 
   static final _databaseName = "cardb.db";
   static final _databaseVersion = 1;
-  static final _table = "cars_table";
+  static final table = "cars_table";
 
   static final columnId = "id";
   static final columnName = "name";
@@ -31,18 +31,42 @@ class DatabaseHelper {
 
   Future _onCreate(Database db , int version) async{
     await db.execute('''
-    creat table $_table(
+    creat table $table(
     $columnId integer primary key autoincrement,
     $columnName text not null,
     $columnMiles integer)
     ''');
   }
 
-  Future insert (car c) async{
+  Future<int> insert (car c) async{
     Database db = await instance.database;
 
     return await db.insert(table, {columnName: c.name, columnMiles: c.miles});
+  }
 
+  Future<List<Map<String, dynamic>>> queryAllRows() async{
+    Database db = await instance.database;
+    return await db.query(table);
+  }
+
+  Future<List<Map<String, dynamic>>> queryRows(name) async{
+    Database db = await instance.database;
+    return await db.query(table, where: "$columnName like '%$name%'");
+  }
+
+  Future<int> queryRowCount()async{
+    Database db = await instance.database;
+    return Sqflite.firstIntValue(await db.rawQuery("select count(*) from $table"));
+  }
+  
+  Future<int> delete(int id) async{
+    Database db = await instance.database;
+    return await db.delete(table, where: '$columnId=?', whereArgs: [id]);
+  }
+  
+  Future<int> update(car c) async{
+    Database db = await instance.database;
+    return await db.update(table, c.toMap(), where: '$columnId=?', whereArgs: [c.id]);
   }
 
 }
